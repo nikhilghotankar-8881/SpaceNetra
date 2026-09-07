@@ -1,0 +1,74 @@
+# ==============================================================================
+# SpaceNetra -- Master Project Configuration
+# ==============================================================================
+
+project:
+  name: "SpaceNetra"
+  version: "0.1.0"
+  description: "AI-Powered Satellite Intelligence & Change Detection Platform"
+  author: "SpaceNetra Team"
+
+system:
+  seed: 42
+  device: "auto"  # "auto" (CUDA if available else CPU), "cuda", "cpu"
+  num_workers: 4
+  pin_memory: true
+
+paths:
+  data_dir: "data"
+  raw_data_dir: "data/raw"
+  processed_data_dir: "data/processed"
+  levir_cd_dir: "data/levir_cd"
+  embeddings_dir: "data/embeddings"
+  checkpoints_dir: "checkpoints"
+  outputs_dir: "outputs"
+  predictions_dir: "outputs/predictions"
+  metrics_dir: "outputs/metrics"
+  visualizations_dir: "outputs/visualizations"
+  logs_dir: "logs"
+
+# AI Problem 1: Change Detection
+change_detection:
+  default_model: "siamese_unet"
+  input_channels: 3  # RGB (or expand to 4 for Sentinel-2 NIR)
+  input_size: [256, 256]
+  patch_size: 256
+  stride: 256
+  models:
+    siamese_unet:
+      encoder_name: "resnet34"
+      encoder_weights: "imagenet"
+      in_channels: 3
+      classes: 1
+    changeformer:
+      embed_dim: 256
+      depth: 4
+      heads: 8
+  training:
+    batch_size: 16
+    learning_rate: 0.0001
+    weight_decay: 0.0001
+    max_epochs: 50
+    patience: 10
+    loss: "bce_dice"  # Combined BCE + Dice loss
+
+# AI Problem 2: Semantic Tile Retrieval
+semantic_retrieval:
+  default_model: "remoteclip"
+  embedding_dim: 512
+  top_k: 5
+  similarity_threshold: 0.7
+
+# AI Problem 3: Credibility & Confidence Engine
+credibility_engine:
+  weights:
+    model_confidence: 0.40
+    cloud_cover_penalty: 0.20
+    resolution_score: 0.15
+    temporal_gap_penalty: 0.15
+    historical_agreement: 0.10
+  min_confidence_threshold: 0.50
+
+logging:
+  level: "INFO"
+  format: "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level:10}</level> | <cyan>{name}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
