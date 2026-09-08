@@ -52,13 +52,25 @@ class ChangeDetectionTrainer:
         self.checkpoint_dir.mkdir(parents=True, exist_ok=True)
         self.best_f1 = -1.0
 
+    def _parse_batch(self, batch: Any) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Parses batch whether it is a dictionary (from LEVIRCDDataset) or a tuple/list."""
+        if isinstance(batch, dict):
+            t1 = batch["img_a"]
+            t2 = batch["img_b"]
+            target = batch["mask"]
+        elif isinstance(batch, (list, tuple)):
+            t1, t2, target = batch[:3]
+        else:
+            raise ValueError(f"Unsupported batch type: {type(batch)}")
+        return t1, t2, target
+
     def train_epoch(self, dataloader: DataLoader) -> float:
         """Runs one epoch of training over dataloader."""
         self.model.train()
         total_loss = 0.0
 
         for batch in dataloader:
-            t1, t2, target = batch
+            t1, t2, target = self._parse_batch(batch)
             t1 = t1.to(self.device)
             t2 = t2.to(self.device)
             target = target.to(self.device)
@@ -88,10 +100,11 @@ class ChangeDetectionTrainer:
 
         with torch.no_grad():
             for batch in dataloader:
-                t1, t2, target = batch
+                t1, t2, target = self._parse_batch(batch)
                 t1 = t1.to(self.device)
                 t2 = t2.to(self.device)
                 target = target.to(self.device)
+
 
                 logits = self.model(t1, t2, return_logits=True)
                 loss = self.criterion(logits, target)
@@ -135,6 +148,14 @@ class ChangeDetectionTrainer:
             metrics = val_metrics
             metrics["train_loss"] = train_loss
 
+            print(
+                f"Epoch [{epoch:02d}/{epochs:02d}] - "
+                f"Train Loss: {train_loss:.4f} | "
+                f"Val Loss: {val_metrics['val_loss']:.4f} | "
+                f"Val F1: {val_metrics['val_f1']:.4f} | "
+                f"Val IoU: {val_metrics['val_iou']:.4f}"
+            )
+
             if checkpoint_callback is not None:
                 checkpoint_callback.step(metrics, epoch, self.model, self.optimizer)
             else:
@@ -148,6 +169,7 @@ class ChangeDetectionTrainer:
                 break
 
         return metrics
+
 
 
     def save_checkpoint(self, filename: str = "best_model.pth"):

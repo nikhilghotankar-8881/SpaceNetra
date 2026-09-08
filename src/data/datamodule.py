@@ -35,10 +35,17 @@ class LEVIRCDDataModule:
         self.data_dir = Path(data_dir) if data_dir is not None else config.paths.levir_cd_dir
         self.batch_size = batch_size if batch_size is not None else config.change_detection.training.get("batch_size", 8)
         self.patch_size = patch_size
-        self.num_workers = num_workers if num_workers is not None else config.system.num_workers
-        self.pin_memory = pin_memory if pin_memory is not None else config.system.pin_memory
+
+        # Auto-adjust for CPU mode (especially on Windows) to prevent multiprocessing hangs
+        if not torch.cuda.is_available():
+            self.num_workers = 0
+            self.pin_memory = False
+        else:
+            self.num_workers = num_workers if num_workers is not None else config.system.num_workers
+            self.pin_memory = pin_memory if pin_memory is not None else config.system.pin_memory
 
         self.train_dataset: Optional[LEVIRCDDataset] = None
+
         self.val_dataset: Optional[LEVIRCDDataset] = None
         self.test_dataset: Optional[LEVIRCDDataset] = None
 
