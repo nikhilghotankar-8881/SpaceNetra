@@ -6,7 +6,8 @@ learning rate scheduling, and checkpoint management.
 """
 
 from pathlib import Path
-from typing import Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
+
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
@@ -118,7 +119,14 @@ class ChangeDetectionTrainer:
             "val_iou": iou,
         }
 
-    def fit(self, train_loader: DataLoader, val_loader: DataLoader, epochs: int = 5) -> Dict[str, float]:
+    def fit(
+        self,
+        train_loader: DataLoader,
+        val_loader: DataLoader,
+        epochs: int = 5,
+        early_stopping: Optional[Any] = None,
+        checkpoint_callback: Optional[Any] = None,
+    ) -> Dict[str, float]:
         """Runs full training loop across specified number of epochs."""
         metrics = {}
         for epoch in range(1, epochs + 1):
@@ -127,12 +135,20 @@ class ChangeDetectionTrainer:
             metrics = val_metrics
             metrics["train_loss"] = train_loss
 
-            val_f1 = val_metrics["val_f1"]
-            if val_f1 > self.best_f1:
-                self.best_f1 = val_f1
-                self.save_checkpoint("best_model.pth")
+            if checkpoint_callback is not None:
+                checkpoint_callback.step(metrics, epoch, self.model, self.optimizer)
+            else:
+                val_f1 = val_metrics["val_f1"]
+                if val_f1 > self.best_f1:
+                    self.best_f1 = val_f1
+                    self.save_checkpoint("best_model.pth")
+
+            if early_stopping is not None and early_stopping.step(val_metrics.get("val_f1", 0.0)):
+                print(f"[INFO] Early stopping triggered at epoch {epoch}.")
+                break
 
         return metrics
+
 
     def save_checkpoint(self, filename: str = "best_model.pth"):
         """Saves model weights to checkpoint directory."""
