@@ -127,3 +127,27 @@ class ProvenanceModel(Base):
             "checkpoint_hash": self.checkpoint_hash,
             "timestamp": self.timestamp,
         }
+
+
+class UserModel(Base):
+    """User Credentials & Role-Based Access Control Table."""
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    username = Column(String(100), unique=True, nullable=False, index=True)
+    email = Column(String(100), unique=True, nullable=False)
+    hashed_password = Column(String(255), nullable=False)
+    role = Column(String(50), default="ANALYST")
+    is_active = Column(Integer, default=1)
+    created_at = Column(String(50), default=lambda: datetime.now(timezone.utc).isoformat())
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "id": self.id,
+            "username": self.username,
+            "email": self.email,
+            "role": self.role,
+            "is_active": bool(self.is_active),
+            "created_at": self.created_at,
+        }
+
