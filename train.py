@@ -13,8 +13,10 @@ import torch
 from torch.utils.data import DataLoader, TensorDataset
 
 from src.models.siamese_unet import SiameseUNet
+from src.models.changeformer import ChangeFormer
 from src.models.losses import BCEDiceLoss
 from src.training.trainer import ChangeDetectionTrainer
+
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -65,11 +67,17 @@ def main():
     epochs = args.epochs if args.epochs is not None else config["training"].get("epochs", 50)
     batch_size = args.batch_size if args.batch_size is not None else config["data"].get("batch_size", 8)
 
-    backbone = config["model"].get("backbone", "resnet18")
-    pretrained = config["model"].get("pretrained", True)
-    checkpoint_dir = config["checkpoint"].get("save_dir", "checkpoints")
+    checkpoint_dir = config.get("checkpoint", {}).get("save_dir", "checkpoints")
+    arch = config["model"].get("architecture", "siamese_unet").lower()
+    if arch == "changeformer":
+        embed_dims = config["model"].get("embed_dims", [64, 128, 320, 512])
+        model = ChangeFormer(embed_dims=embed_dims)
+    else:
+        backbone = config["model"].get("backbone", "resnet18")
+        pretrained = config["model"].get("pretrained", True)
+        model = SiameseUNet(backbone=backbone, pretrained=pretrained)
 
-    model = SiameseUNet(backbone=backbone, pretrained=pretrained)
+
     criterion = BCEDiceLoss(
         bce_weight=config["loss"].get("bce_weight", 1.0),
         dice_weight=config["loss"].get("dice_weight", 1.0),
