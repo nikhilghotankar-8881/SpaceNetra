@@ -3,9 +3,13 @@ Neural network model architectures for SpaceNetra change detection and intellige
 """
 
 from src.models.siamese_unet import SiameseUNet, SiameseEncoder, DecoderBlock
+from src.models.losses import BCEDiceLoss, DiceLoss
 
 __all__ = [
     "SiameseUNet",
     "SiameseEncoder",
     "DecoderBlock",
+    "BCEDiceLoss",
+    "DiceLoss",
 ]
+
