@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  # Nginx Web Proxy & Static Frontend UI
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - spacenetra-net
+    restart: always
+
+  # FastAPI REST Backend Service
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://spacenetra:spacenetra_pass@postgres:5432/spacenetra_db
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
+      - MODEL_SERVICE_URL=http://model-service:8001
+    depends_on:
+      - postgres
+      - qdrant
+    networks:
+      - spacenetra-net
+    restart: always
+
+  # PyTorch Model Real-Time Inference Service
+  model-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: python -c "print('SpaceNetra PyTorch Model Inference Worker Active')"
+    ports:
+      - "8001:8001"
+    environment:
+      - CUDA_VISIBLE_DEVICES=0
+    networks:
+      - spacenetra-net
+    restart: always
+
+  # Qdrant Vector Database
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    networks:
+      - spacenetra-net
+    restart: always
+
+  # PostGIS Spatial Database
+  postgres:
+    image: postgis/postgis:15-3.3
+    environment:
+      - POSTGRES_DB=spacenetra_db
+      - POSTGRES_USER=spacenetra
+      - POSTGRES_PASSWORD=spacenetra_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - spacenetra-net
+    restart: always
+
+networks:
+  spacenetra-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  qdrant_data:
