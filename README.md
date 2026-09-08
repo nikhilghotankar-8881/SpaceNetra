@@ -350,6 +350,7 @@ python inference.py --t1 path/to/image1.tif --t2 path/to/image2.tif --output out
 | **Containerization** | Docker, Docker Compose |
 | **ML Tracking** | TensorBoard / MLflow |
 
+
 ---
 
 ## Hardware Requirements

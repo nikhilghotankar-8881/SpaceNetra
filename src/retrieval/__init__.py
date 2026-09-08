@@ -1,5 +1,5 @@
 """
-Semantic tile retrieval using RemoteCLIP and vector indexing.
+Semantic tile retrieval using RemoteCLIP, vector indexing, and similar-site discovery.
 """
 
 from src.retrieval.semantic_search import (
@@ -7,9 +7,11 @@ from src.retrieval.semantic_search import (
     SemanticSearchEngine,
     VectorSearchIndex,
 )
+from src.retrieval.similar_sites import SimilarSiteFinder
 
 __all__ = [
     "RemoteCLIPEmbedder",
     "VectorSearchIndex",
     "SemanticSearchEngine",
+    "SimilarSiteFinder",
 ]
