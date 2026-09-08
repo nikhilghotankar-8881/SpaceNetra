@@ -1,12 +1,12 @@
 """
 Image tiling and patch stitching utilities for SpaceNetra.
 
-Provides functions to split arbitrary-sized satellite images into model-compatible
+Provides functions and classes to split arbitrary-sized satellite images into model-compatible
 patches (with optional overlap) and stitch predicted patch masks back into full-resolution
 change maps using weighted blending.
 """
 
-from typing import List, Tuple
+from typing import List, Tuple, Union
 import numpy as np
 
 
@@ -186,3 +186,47 @@ def split_and_stitch_triplet(
     original_size = (img_a.shape[0], img_a.shape[1])
 
     return patch_pairs, positions, original_size, padded_size
+
+
+class ImageTiler:
+    """Class wrapper for splitting images into spatial patches."""
+
+    def __init__(self, tile_size: int = 256, overlap: int = 0):
+        self.tile_size = tile_size
+        self.stride = tile_size - overlap
+
+    def split_image(self, image: np.ndarray) -> Tuple[np.ndarray, dict]:
+        patches, positions, padded_size = split_into_patches(
+            image, patch_size=self.tile_size, stride=self.stride
+        )
+        tile_info = {
+            "positions": positions,
+            "original_size": (image.shape[0], image.shape[1]),
+            "padded_size": padded_size,
+            "tile_size": self.tile_size,
+        }
+        return np.array(patches), tile_info
+
+
+class PatchStitcher:
+    """Class wrapper for stitching predicted patches into full images."""
+
+    def __init__(self, overlap: int = 0):
+        self.overlap = overlap
+
+    def stitch_patches(
+        self,
+        patches: Union[List[np.ndarray], np.ndarray],
+        tile_info: dict,
+    ) -> np.ndarray:
+        if isinstance(patches, np.ndarray):
+            patches_list = [p for p in patches]
+        else:
+            patches_list = patches
+        return stitch_patches(
+            patches=patches_list,
+            positions=tile_info["positions"],
+            original_size=tile_info["original_size"],
+            padded_size=tile_info["padded_size"],
+            patch_size=tile_info["tile_size"],
+        )
