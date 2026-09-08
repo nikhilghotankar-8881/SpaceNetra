@@ -1,0 +1,47 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Virtual environment
+venv/
+env/
+ENV/
+.venv/
+
+# Environment variables
+.env
+.env.local
+
+# Data, Checkpoints, Logs, and Outputs (except .gitkeep)
+data/*
+!data/**/.gitkeep
+checkpoints/*
+!checkpoints/**/.gitkeep
+outputs/*
+!outputs/**/.gitkeep
+logs/*
+!logs/**/.gitkeep
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Jupyter Notebook Checkpoints
+.ipynb_checkpoints/
+
+# Testing and Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Build and Packaging
+build/
+dist/
+*.egg-info/
