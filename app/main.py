@@ -11,6 +11,8 @@ from fastapi.staticfiles import StaticFiles
 from app.api.endpoints import router as api_router
 from app.api.auth_endpoints import router as auth_router
 from app.api.websocket_endpoints import router as ws_router
+from app.api.metrics_endpoints import router as metrics_router
+from app.api.health_endpoints import router as health_router
 
 app = FastAPI(
     title="SpaceNetra Satellite Intelligence Engine",
@@ -31,6 +33,8 @@ app.add_middleware(
 app.include_router(api_router)
 app.include_router(auth_router, prefix="/api")
 app.include_router(ws_router, prefix="/api")
+app.include_router(metrics_router, prefix="/api")
+app.include_router(health_router, prefix="/api")
 
 # Static directory path setup
 static_dir = Path(__file__).parent / "static"
